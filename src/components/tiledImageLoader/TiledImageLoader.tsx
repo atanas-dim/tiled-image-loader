@@ -106,6 +106,29 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
     };
   }, [hasTransformed]);
 
+  useEffect(() => {
+    // Function to handle window refocus
+    const handleFocus = () => {
+      console.log("Window has been refocused");
+      setHasTransformed(true);
+    };
+
+    // Function to handle window blur (unfocus)
+    const handleBlur = () => {
+      console.log("Window has lost focus");
+    };
+
+    // Add event listeners for window focus and blur
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("blur", handleBlur);
+
+    // Cleanup function to remove event listeners when component unmounts
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, []);
+
   return (
     <div
       className="size-full"
@@ -114,7 +137,7 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
     >
       <TransformWrapper
         initialScale={0.675}
-        minScale={0.475}
+        minScale={0.3}
         maxScale={1}
         centerOnInit
         centerZoomedOut
@@ -124,7 +147,8 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
           setIsReady(true);
           setHasTransformed(true);
         }}
-        onTransformed={() => setHasTransformed(true)}
+        onPanningStop={() => setHasTransformed(true)}
+        onZoomStop={() => setHasTransformed(true)}
         panning={{
           velocityDisabled: true,
         }}
@@ -165,7 +189,7 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
                       currentCol={currentCol}
                       viewport={viewport}
                       setTilesDistanceToViewport={setTilesDistanceToViewport}
-                      shouldShowImage={
+                      imagePreloaded={
                         loadedTiles[`${currentRow}-${currentCol}`]
                       }
                       tileSize={DEFAULT_TILE_SIZE}
@@ -197,7 +221,7 @@ type TileProps = {
   setTilesDistanceToViewport: Dispatch<
     SetStateAction<{ [key: string]: number }>
   >;
-  shouldShowImage: boolean;
+  imagePreloaded: boolean;
   tileSize: number;
   hasTransformed: boolean;
 };
@@ -211,7 +235,7 @@ const Tile: FC<TileProps> = ({
   currentCol,
   viewport,
   setTilesDistanceToViewport,
-  shouldShowImage = false,
+  imagePreloaded = false,
   tileSize,
   hasTransformed,
 }) => {
@@ -219,6 +243,7 @@ const Tile: FC<TileProps> = ({
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    console.log("hasTransformed", hasTransformed);
     if (isVisible) return;
 
     if (tileRef.current) {
@@ -276,7 +301,7 @@ const Tile: FC<TileProps> = ({
         maxHeight: tileSize,
       }}
     >
-      {shouldShowImage || isVisible ? (
+      {imagePreloaded || isVisible ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={`${tiledImagePath}/row-${currentRow}-column-${currentCol}.webp`}
@@ -291,7 +316,7 @@ const Tile: FC<TileProps> = ({
           }}
         />
       ) : null}
-      {shouldShowImage ||
+      {imagePreloaded ||
         (isVisible && (
           <div className="absolute top-0 left-0 size-full">
             {renderTileContent?.(currentRow, currentCol)}
