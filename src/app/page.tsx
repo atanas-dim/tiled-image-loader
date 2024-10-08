@@ -2,8 +2,8 @@ import TiledImageLoader from "@/components/tiledImageLoader/TiledImageLoader";
 
 export default function Home() {
   return (
-    <main className="p-4">
-      <TiledImageLoader tiledImagePath="/images" cols={10} rows={4} />
+    <main className="w-dvw h-dvh bg-orange-100">
+      <TiledImageLoader tiledImagePath="/images" cols={18} rows={12} />
     </main>
   );
 }

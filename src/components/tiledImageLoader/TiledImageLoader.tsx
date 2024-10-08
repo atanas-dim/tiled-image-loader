@@ -18,6 +18,7 @@ type TiledImageLoaderProps = {
   renderTileContent?: (row: number, col: number) => JSX.Element | null;
   cols: number;
   rows: number;
+  loadAllImagesOnStart?: boolean;
 };
 
 const TiledImageLoader: FC<TiledImageLoaderProps> = ({
@@ -25,8 +26,10 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
   renderTileContent,
   cols,
   rows,
+  loadAllImagesOnStart,
 }) => {
   const [isReady, setIsReady] = useState(false);
+  const [hasTransformed, setHasTransformed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const viewport = useMemo(() => {
@@ -61,6 +64,8 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
   }, [tilesDistanceToViewport]);
 
   useEffect(() => {
+    if (!loadAllImagesOnStart) return;
+
     const loadImage = (key: string): Promise<void> => {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -86,10 +91,27 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
     };
 
     loadImagesSequentially();
-  }, [tiledImagePath, tilesOrderedByDistance]);
+  }, [tiledImagePath, tilesOrderedByDistance, loadAllImagesOnStart]);
+
+  useEffect(() => {
+    if (!hasTransformed) return;
+
+    const timeout = setTimeout(() => {
+      setHasTransformed(false);
+
+      clearTimeout(timeout);
+    }, 100);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [hasTransformed]);
 
   return (
-    <div className="size-full" ref={containerRef}>
+    <div
+      className="size-full"
+      ref={containerRef}
+      onPointerUp={() => setHasTransformed(true)}
+    >
       <TransformWrapper
         initialScale={0.675}
         minScale={0.475}
@@ -98,7 +120,11 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
         centerZoomedOut
         limitToBounds
         disablePadding
-        onInit={() => setIsReady(true)}
+        onInit={() => {
+          setIsReady(true);
+          setHasTransformed(true);
+        }}
+        onTransformed={() => setHasTransformed(true)}
         panning={{
           velocityDisabled: true,
         }}
@@ -143,6 +169,7 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
                         loadedTiles[`${currentRow}-${currentCol}`]
                       }
                       tileSize={DEFAULT_TILE_SIZE}
+                      hasTransformed={hasTransformed}
                     />
                   );
                 })
@@ -172,6 +199,7 @@ type TileProps = {
   >;
   shouldShowImage: boolean;
   tileSize: number;
+  hasTransformed: boolean;
 };
 
 const Tile: FC<TileProps> = ({
@@ -183,10 +211,30 @@ const Tile: FC<TileProps> = ({
   currentCol,
   viewport,
   setTilesDistanceToViewport,
-  shouldShowImage: shouldLoadImage = false,
+  shouldShowImage = false,
   tileSize,
+  hasTransformed,
 }) => {
   const tileRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (isVisible) return;
+
+    if (tileRef.current) {
+      const tileRect = tileRef.current.getBoundingClientRect();
+      const isHorizontallyVisible =
+        (tileRect.left >= 0 && tileRect.left <= window.innerWidth) ||
+        (tileRect.right >= 0 && tileRect.right <= window.innerWidth);
+
+      const isVerticallyVisible =
+        (tileRect.top >= 0 && tileRect.top <= window.innerHeight) ||
+        (tileRect.bottom >= 0 && tileRect.bottom <= window.innerHeight);
+
+      const visible = isHorizontallyVisible && isVerticallyVisible;
+      setIsVisible(visible);
+    }
+  }, [hasTransformed, index, isVisible]);
 
   useEffect(() => {
     if (!isReady) return;
@@ -228,7 +276,7 @@ const Tile: FC<TileProps> = ({
         maxHeight: tileSize,
       }}
     >
-      {shouldLoadImage ? (
+      {shouldShowImage || isVisible ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={`${tiledImagePath}/row-${currentRow}-column-${currentCol}.webp`}
@@ -243,11 +291,12 @@ const Tile: FC<TileProps> = ({
           }}
         />
       ) : null}
-      {shouldLoadImage && (
-        <div className="absolute top-0 left-0 size-full">
-          {renderTileContent?.(currentRow, currentCol)}
-        </div>
-      )}
+      {shouldShowImage ||
+        (isVisible && (
+          <div className="absolute top-0 left-0 size-full">
+            {renderTileContent?.(currentRow, currentCol)}
+          </div>
+        ))}
     </div>
   );
 };
