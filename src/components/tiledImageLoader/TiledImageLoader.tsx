@@ -129,15 +129,25 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
     };
   }, []);
 
+  const [minScale, setMinScale] = useState(0.15);
+
+  useEffect(() => {
+    const minScale = Math.min(
+      viewport.width / (cols * DEFAULT_TILE_SIZE),
+      viewport.height / (rows * DEFAULT_TILE_SIZE)
+    );
+    setMinScale(minScale);
+  }, [cols, rows, viewport.height, viewport.width]);
+
   return (
     <div
-      className="size-full"
+      className="size-full touch-manipulation"
       ref={containerRef}
       onPointerUp={() => setHasTransformed(true)}
     >
       <TransformWrapper
-        initialScale={0.675}
-        minScale={0.3}
+        initialScale={0.4}
+        minScale={minScale}
         maxScale={1}
         centerOnInit
         centerZoomedOut
