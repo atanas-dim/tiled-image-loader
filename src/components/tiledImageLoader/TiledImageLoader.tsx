@@ -146,7 +146,7 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
 
   return (
     <div
-      className="size-full touch-manipulation"
+      className="size-full touch-none [&_*]:touch-none"
       ref={containerRef}
       onPointerUp={() => setHasTransformed(true)}
     >
@@ -167,7 +167,7 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
         panning={{
           velocityDisabled: true,
         }}
-        pinch={{ step: 0.001 }}
+        pinch={{ step: 0.005 }}
       >
         <TransformComponent
           wrapperStyle={{
