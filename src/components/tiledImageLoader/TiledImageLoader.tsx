@@ -9,7 +9,11 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+import {
+  ReactZoomPanPinchContentRef,
+  TransformComponent,
+  TransformWrapper,
+} from "react-zoom-pan-pinch";
 
 const DEFAULT_TILE_SIZE = 292;
 
@@ -31,6 +35,7 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
   const [isReady, setIsReady] = useState(false);
   const [hasTransformed, setHasTransformed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const transformWrapperRef = useRef<ReactZoomPanPinchContentRef>(null);
 
   const viewport = useMemo(() => {
     if (typeof window === "undefined") return { width: 0, height: 0 };
@@ -146,11 +151,12 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
 
   return (
     <div
-      className="size-full touch-none [&_*]:touch-none"
+      className="size-full relative touch-none"
       ref={containerRef}
       onPointerUp={() => setHasTransformed(true)}
     >
       <TransformWrapper
+        ref={transformWrapperRef}
         initialScale={initialScale}
         minScale={minScale}
         maxScale={1}
@@ -163,11 +169,14 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
           setHasTransformed(true);
         }}
         onPanningStop={() => setHasTransformed(true)}
-        onZoomStop={() => setHasTransformed(true)}
+        onZoomStop={() => {
+          setHasTransformed(true);
+        }}
         panning={{
           velocityDisabled: true,
         }}
-        pinch={{ step: 0.005 }}
+        pinch={{ disabled: true }}
+        smooth
       >
         <TransformComponent
           wrapperStyle={{
@@ -217,6 +226,32 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
           </div>
         </TransformComponent>
       </TransformWrapper>
+      <div className="fixed bottom-4 right-4 flex flex-col gap-2 z-10">
+        <button
+          className="rounded-full size-12 flex items-center justify-center bg-white text-black"
+          onClick={() => {
+            transformWrapperRef.current?.zoomIn();
+            const timeout = setTimeout(() => {
+              setHasTransformed(true);
+              clearTimeout(timeout);
+            }, 400);
+          }}
+        >
+          <PlusIcon />
+        </button>
+        <button
+          className="rounded-full size-12 flex items-center justify-center bg-white text-black"
+          onClick={() => {
+            transformWrapperRef.current?.zoomOut();
+            const timeout = setTimeout(() => {
+              setHasTransformed(true);
+              clearTimeout(timeout);
+            }, 400);
+          }}
+        >
+          <MinusIcon />
+        </button>
+      </div>
     </div>
   );
 };
@@ -340,3 +375,36 @@ const Tile: FC<TileProps> = ({
     </div>
   );
 };
+
+const PlusIcon: FC = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
+const MinusIcon: FC = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
