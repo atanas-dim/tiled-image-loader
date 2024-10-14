@@ -4,9 +4,11 @@ import "./globals.css";
 export const viewport: Viewport = {
   themeColor: "#f1dec2",
   width: "device-width",
+  minimumScale: 1,
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -21,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased touch-none">{children}</body>
     </html>
   );
 }

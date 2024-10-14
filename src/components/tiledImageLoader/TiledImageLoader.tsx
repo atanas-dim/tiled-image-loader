@@ -173,6 +173,7 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
           wrapperStyle={{
             width: "100%",
             height: "100%",
+            willChange: "transform",
           }}
         >
           <div
