@@ -1,12 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+
+export const viewport: Viewport = {
+  themeColor: "#f1dec2",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   title: "Tiled Image loader",
   description: "",
-  other: {
-    "theme-color": "#f1dec2",
-  },
 };
 
 export default function RootLayout({

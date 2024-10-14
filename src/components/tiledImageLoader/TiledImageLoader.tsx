@@ -131,12 +131,17 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
 
   const [minScale, setMinScale] = useState(0.15);
 
+  const [initialScale, setInitialScale] = useState(0.5);
+
   useEffect(() => {
     const minScale = Math.min(
       viewport.width / (cols * DEFAULT_TILE_SIZE),
       viewport.height / (rows * DEFAULT_TILE_SIZE)
     );
     setMinScale(minScale);
+
+    const initialScale = (minScale + 1) / 2;
+    setInitialScale(initialScale);
   }, [cols, rows, viewport.height, viewport.width]);
 
   return (
@@ -146,7 +151,7 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
       onPointerUp={() => setHasTransformed(true)}
     >
       <TransformWrapper
-        initialScale={0.4}
+        initialScale={initialScale}
         minScale={minScale}
         maxScale={1}
         centerOnInit
@@ -253,7 +258,6 @@ const Tile: FC<TileProps> = ({
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    console.log("hasTransformed", hasTransformed);
     if (isVisible) return;
 
     if (tileRef.current) {
