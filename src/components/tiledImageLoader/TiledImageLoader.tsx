@@ -36,6 +36,7 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
   const [hasTransformed, setHasTransformed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const transformWrapperRef = useRef<ReactZoomPanPinchContentRef>(null);
+  const zoomTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const viewport = useMemo(() => {
     if (typeof window === "undefined") return { width: 0, height: 0 };
@@ -231,10 +232,12 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
           className="rounded-full size-12 flex items-center justify-center bg-white text-black"
           onClick={() => {
             transformWrapperRef.current?.zoomIn();
-            const timeout = setTimeout(() => {
+
+            if (zoomTimeout.current) clearTimeout(zoomTimeout.current);
+            zoomTimeout.current = setTimeout(() => {
               setHasTransformed(true);
-              clearTimeout(timeout);
-            }, 400);
+              if (zoomTimeout.current) clearTimeout(zoomTimeout.current);
+            }, 600);
           }}
         >
           <PlusIcon />
@@ -243,10 +246,12 @@ const TiledImageLoader: FC<TiledImageLoaderProps> = ({
           className="rounded-full size-12 flex items-center justify-center bg-white text-black"
           onClick={() => {
             transformWrapperRef.current?.zoomOut();
-            const timeout = setTimeout(() => {
+
+            if (zoomTimeout.current) clearTimeout(zoomTimeout.current);
+            zoomTimeout.current = setTimeout(() => {
               setHasTransformed(true);
-              clearTimeout(timeout);
-            }, 400);
+              if (zoomTimeout.current) clearTimeout(zoomTimeout.current);
+            }, 600);
           }}
         >
           <MinusIcon />
